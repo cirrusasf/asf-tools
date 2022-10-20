@@ -159,7 +159,7 @@ def calculate_hand(dem_array, dem_gt, dem_proj4, mask=None, verbose=False, acc_t
         if np.any(np.isnan(hand)):
             grid.hand = fill_nan(hand)
 
-    return hand
+    return hand, g
 
 
 def get_hand_by_land_mask(hand, nodata_fill_value, dem):
@@ -351,3 +351,7 @@ def main():
     make_copernicus_hand(args.out_raster, args.vector_file)
 
     log.info(f'HAND GeoTIFF created successfully: {args.out_raster}')
+
+
+if __name__ =="__main__":
+    main()

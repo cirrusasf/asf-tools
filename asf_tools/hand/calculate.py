@@ -55,9 +55,7 @@ def fill_nan_based_on_dem(arr, dem):
             hond = astropy.convolution.interpolate_replace_nans(hond.astype(float),
                                                                 kernel, convolve=astropy.convolution.convolve)
     my_mask = np.isnan(arr)
-
     arr[my_mask] = dem[my_mask] - hond[my_mask]
-
     return arr.astype(arr_type)
 
 
@@ -282,3 +280,6 @@ def main():
     make_copernicus_hand(args.out_raster, args.vector_file)
 
     log.info(f'HAND GeoTIFF created successfully: {args.out_raster}')
+
+if __name__ =="__main__":
+    main()
