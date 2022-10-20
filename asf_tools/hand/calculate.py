@@ -131,7 +131,7 @@ def calculate_hand(dem_array, dem_affine: rasterio.Affine, dem_crs: rasterio.crs
 
     # TODO: also mask ocean pixels here?
 
-    return hand
+    return hand, acc
 
 
 def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: GeometryCollection,
@@ -153,12 +153,16 @@ def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: Geometr
         )
         basin_array = src.read(1, window=basin_window)
 
-        hand = calculate_hand(basin_array, basin_affine_tf, src.crs, basin_mask, acc_thresh=acc_thresh)
+        hand, acc = calculate_hand(basin_array, basin_affine_tf, src.crs, basin_mask, acc_thresh=acc_thresh)
 
         write_cog(
             out_raster, hand, transform=basin_affine_tf.to_gdal(), epsg_code=src.crs.to_epsg(), nodata_value=np.nan,
         )
-
+        # test purpose, output acc
+        out_acc = str(out_raster).replace(".tif", "_acc.tif")
+        write_cog(
+            out_acc, acc, transform=basin_affine_tf.to_gdal(), epsg_code=src.crs.to_epsg(), nodata_value=np.nan,
+        )
 
 def make_copernicus_hand(out_raster:  Union[str, Path], vector_file: Union[str, Path], acc_thresh: Optional[int] = 100):
     """Copernicus GLO-30 Height Above Nearest Drainage (HAND)
