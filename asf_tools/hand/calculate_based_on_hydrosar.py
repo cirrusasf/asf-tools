@@ -159,7 +159,7 @@ def calculate_hand(dem_array, dem_gt, dem_proj4, mask=None, verbose=False, acc_t
         if np.any(np.isnan(hand)):
             grid.hand = fill_nan(hand)
 
-    return hand, g
+    return hand, grid.acc
 
 
 def get_hand_by_land_mask(hand, nodata_fill_value, dem):
@@ -258,6 +258,8 @@ def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: Geometr
     hand = np.zeros(dem.shape)
     hand[:] = np.nan
 
+    acc = np.zeros(dem.shape)
+
     # loop over geometries to calculate the HAND for each geometry
     for k, p in enumerate(geometries.geoms):
         verbose = False
@@ -273,11 +275,15 @@ def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: Geometr
             continue
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
-            h = calculate_hand(np.squeeze(dem.read(window=win)), tf, dem.crs.to_dict(),
+            h, acc = calculate_hand(np.squeeze(dem.read(window=win)), tf, dem.crs.to_dict(),
                                mask=not_mask, verbose=verbose, acc_thresh=100)
 
         clip_hand = hand[win.row_off:win.row_off + win.height, win.col_off:win.col_off + win.width]  # By reference
         clip_hand[not_mask] = h[not_mask]
+
+        clip_acc = acc[win.row_off:win.row_off + win.height, win.col_off:win.col_off + win.width]  # By reference
+        clip_acc[not_mask] = h[not_mask]
+
 
     hand[dem_nodata_mask] = nodata_fill_value
     hand[basin_mask] = np.nan
@@ -308,6 +314,9 @@ def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: Geometr
     # write the HAND
     write_cog(str(out_raster), hand, transform=basin_affine_tf.to_gdal(), epsg_code=src.crs.to_epsg())
 
+    # write the acc
+    out_acc = str(out_raster).replace(".tif", "_acc.tif")
+    write_cog(str(out_acc), acc, transform=basin_affine_tf.to_gdal(), epsg_code=src.crs.to_epsg())
 
 def make_copernicus_hand(out_raster:  Union[str, Path], vector_file: Union[str, Path]):
     """Copernicus GLO-30 Height Above Nearest Drainage (HAND)

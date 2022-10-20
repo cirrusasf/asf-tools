@@ -155,7 +155,7 @@ def calculate_hand(dem_array, dem_affine: rasterio.Affine, dem_crs: rasterio.crs
         valid_low_flats = np.logical_and(valid_flats, grid.inflated_dem < mean_height)
         hand[valid_low_flats] = 0
 
-    return hand
+    return hand, grid.acc
 
 
 def get_hand_by_land_mask(hand, nodata_fill_value, dem):
@@ -215,7 +215,7 @@ def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: Geometr
         )
         basin_array = src.read(1, window=basin_window)
 
-        hand = calculate_hand(basin_array, basin_affine_tf, src.crs, ~basin_mask)
+        hand, acc = calculate_hand(basin_array, basin_affine_tf, src.crs, ~basin_mask)
         # fill non basin_mask with nodata_fill_value
         nodata_fill_value = np.finfo(float).eps
         hand[basin_mask] = nodata_fill_value
@@ -236,6 +236,10 @@ def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: Geometr
         hand[basin_mask] = np.nan
         # write the HAND
         write_cog(str(out_raster), hand, transform=basin_affine_tf.to_gdal(), epsg_code=src.crs.to_epsg())
+
+        # write the acc
+        out_acc = str(out_raster).replace(".tif", "_acc.tif")
+        write_cog(str(out_acc), acc, transform=basin_affine_tf.to_gdal(), epsg_code=src.crs.to_epsg())
 
 
 def make_copernicus_hand(out_raster:  Union[str, Path], vector_file: Union[str, Path]):
