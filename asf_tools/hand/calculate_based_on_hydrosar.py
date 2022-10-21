@@ -275,14 +275,14 @@ def calculate_hand_for_basins(out_raster:  Union[str, Path], geometries: Geometr
             continue
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
-            h, acc = calculate_hand(np.squeeze(dem.read(window=win)), tf, dem.crs.to_dict(),
+            hand_basin, acc_basin = calculate_hand(np.squeeze(dem.read(window=win)), tf, dem.crs.to_dict(),
                                mask=not_mask, verbose=verbose, acc_thresh=100)
 
         clip_hand = hand[win.row_off:win.row_off + win.height, win.col_off:win.col_off + win.width]  # By reference
-        clip_hand[not_mask] = h[not_mask]
+        clip_hand[not_mask] = hand_basin[not_mask]
 
         clip_acc = acc[win.row_off:win.row_off + win.height, win.col_off:win.col_off + win.width]  # By reference
-        clip_acc[not_mask] = h[not_mask]
+        clip_acc[not_mask] = acc_basin[not_mask]
 
 
     hand[dem_nodata_mask] = nodata_fill_value
